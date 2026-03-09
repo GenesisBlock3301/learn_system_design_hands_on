@@ -62,7 +62,7 @@ Detailed strategy can be found in [LEARNING_STRATEGY.md](file:///Users/mdnuramin
 - Caching fundamentals and Redis
 
 **💻 Python Projects:**
-- Multi-server Flask Application
+- Multi-server Fast Application
 - Simple Load Balancer
 - SQL vs NoSQL Comparison Tool
 - Database Sharding Simulator

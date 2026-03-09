@@ -1,5 +1,7 @@
 import socket
 import time
+from urllib.parse import urlparse, parse_qs
+from collections import deque
 
 # 1. Create a socket (AF_INET = IPv4, SOCK_STREAM = TCP)
 # AF_INET refers to the address family for IPv4
@@ -15,13 +17,15 @@ server_socket.bind(('127.0.0.1', 8080))
 server_socket.listen(1)
 print("Server is listening on http://127.0.0.1:8080 ...")
 
+recent = deque()
+
 try:
     while True:
         # 4. Accept a connection
         # This blocks until a client connects
         client_conn, client_addr = server_socket.accept()
         print(f"Connected by {client_addr}")
-        
+        start_time = time.time()
         # 5. Receive the data (max 1024 bytes)
         data = client_conn.recv(1024)
         if not data:
@@ -38,19 +42,44 @@ try:
         if len(parts) > 1:
             requested_path = parts[1]
             print(f"🎯 DETECTED PATH: {requested_path}")
-            
-            # --- SIMULATE BLOCKING ---
-            # We sleep for 10 seconds to keep the connection open and block the loop
-            print("⏳ Simulating a very slow request (10 seconds)...")
-            time.sleep(10)
+            parsed = urlparse(requested_path)
+            qs = parse_qs(parsed.query)
+            try:
+                delay = float(qs.get("delay", ["0"])[0])
+            except Exception:
+                delay = 0.0
+            try:
+                size = int(qs.get("size", ["0"])[0])
+            except Exception:
+                size = 0
+            if delay > 0:
+                print(f"⏳ Simulating delay: {delay}s")
+                time.sleep(delay)
         else:
             requested_path = "unknown"
 
         # 6. Send a minimal HTTP response
         # We'll include the detected path in the response!
-        body = f"Hello! You requested the path: {requested_path}\r\nData: {str({'name': 'nas'})}"
-        response = f"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\n\r\n{body}"
-        client_conn.sendall(response.encode('utf-8'))
+        processing_ms = (time.time() - start_time) * 1000.0
+        if 'size' in locals() and size > 0:
+            body_bytes = (("X" * size)).encode('utf-8')
+        else:
+            body = f"Hello! You requested the path: {requested_path}\r\nData: {str({'name': 'nas'})}"
+            body_bytes = body.encode('utf-8')
+        headers = (
+            "HTTP/1.1 200 OK\r\n"
+            "Content-Type: text/plain\r\n"
+            f"Content-Length: {len(body_bytes)}\r\n"
+            f"X-Response-Time: {processing_ms:.2f}ms\r\n"
+            "Connection: close\r\n"
+            "\r\n"
+        ).encode('utf-8')
+        client_conn.sendall(headers + body_bytes)
+        end_time = time.time()
+        recent.append(end_time)
+        while recent and (end_time - recent[0]) > 1.0:
+            recent.popleft()
+        print(f"📈 rt_ms={((end_time - start_time)*1000):.2f} throughput_1s={len(recent)}")
         
         # 7. Close the connection
         client_conn.close()
