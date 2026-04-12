@@ -1,0 +1,33 @@
+# Docker Compose for Production-like Deployment
+# Usage: docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+
+version: "3.8"
+
+services:
+  app:
+    deploy:
+      replicas: 2
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    # Production: Don't expose port directly, use reverse proxy
+    # ports: !reset []
+    # networks:
+    #   - app-network
+
+# networks:
+#   app-network:
+#     external: true

@@ -1,0 +1,16 @@
+# Docker Compose for Local Development
+# Builds from local./app/Dockerfile - no Docker Hub needed
+services:
+  app:
+    build:
+      context: ../app
+      dockerfile: Dockerfile
+    # Local image name (not pushed to Docker Hub)
+    image: infra-practice-app:dev
+    container_name: infra-practice-app
+    ports:
+      - "${PORT:-8000}:8000"
+    restart: unless-stopped
+    environment:
+      - DEBUG=1
+      - LOG_LEVEL=debug

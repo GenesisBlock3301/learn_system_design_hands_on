@@ -61,7 +61,7 @@
 - ✅ What happens when you type a URL
 
 #### **Hands-On Projects** (Enhanced with ROADMAP.md approach)
-```python
+```
 # Week 1-2 Projects
 ├── Simple HTTP Server (Python http.server)
 ├── REST API with FastAPI (not just Flask)
@@ -86,40 +86,120 @@ Deliverables:
 ---
 
 ### **⚙️ PHASE 1: PRODUCTION SOFTWARE FOUNDATION** (Weeks 3-6)
-**Goal**: Build enterprise-grade APIs with proper architecture
+**Goal**: Build enterprise-grade APIs with proper architecture, mastering SQLAlchemy ORM for scalable database operations
 
 #### **Core Building Blocks** (Merged Approach)
-```python
-# Week 3-6 Comprehensive Projects
+```
+# Week 3-6 Comprehensive Projects with SQLAlchemy ORM Deep-Dive
 
-## Project 1.1: Enterprise API Foundation
+## Project 1.1: Enterprise API Foundation + SQLAlchemy ORM Core
 ├── FastAPI with async endpoints
 ├── Docker containerization with multi-stage builds
-├── PostgreSQL integration with SQLAlchemy
+├── PostgreSQL integration with SQLAlchemy 2.0
+│   ├── Declarative Base models with type hints
+│   ├── Async session management (asyncpg)
+│   ├── CRUD operations with proper patterns
+│   ├── Database migrations with Alembic
+│   └── Connection pooling configuration
 ├── Redis caching with connection pooling
 ├── Structured logging (JSON format)
 ├── Health monitoring endpoints
-├── Input validation (Pydantic)
-└── Unit testing with pytest
+├── Input validation (Pydantic v2 with ORM mode)
+└── Unit testing with pytest and test databases
 
-## Project 1.2: Load Balancing & Scaling  
+## Project 1.2: Load Balancing & Scaling + ORM Relationships & Queries
 ├── Custom load balancer implementation
 ├── Nginx reverse proxy configuration
 ├── Horizontal scaling simulation
-├── Database connection pooling
-├── Caching strategies (LRU, LFU)
+├── SQLAlchemy ORM Relationships & Query Optimization
+│   ├── All relationship types (1:1, 1:N, N:M, self-referential)
+│   ├── Eager loading strategies (joinedload, selectinload, subqueryload)
+│   ├── Solving N+1 query problem
+│   ├── Complex multi-table joins via ORM
+│   ├── Query filtering, sorting, pagination
+│   ├── Aggregations and window functions
+│   └── Query profiling with EXPLAIN ANALYZE
+├── Database connection pooling and optimization
+├── Caching strategies (LRU, LFU) with ORM integration
 ├── Performance benchmarking
 └── Load testing with Locust
 
-## Project 1.3: Security & Monitoring
-├── JWT authentication system
+## Project 1.3: Security & Monitoring + Advanced ORM Patterns
+├── JWT authentication system with DB integration
 ├── Rate limiting (token bucket algorithm)
 ├── API documentation (OpenAPI/Swagger)
 ├── Prometheus metrics integration
 ├── Grafana dashboards creation
+├── Advanced SQLAlchemy ORM Patterns
+│   ├── Hybrid properties and expressions
+│   ├── Composite primary keys and indexes
+│   ├── Soft deletes and versioning
+│   ├── Optimistic/pessimistic locking
+│   ├── Event listeners (auditing, validation)
+│   └── Raw SQL integration for edge cases
 ├── Security scanning integration
 └── Error handling middleware
+
+## Project 1.4: Database Sharding & Horizontal Scaling (Week 6)
+├── SQLAlchemy Multi-Database Routing
+│   ├── Read/Write splitting configuration
+│   ├── Custom session routing by query type
+│   └── Multiple bind engines
+├── Horizontal Partitioning (Sharding) Strategies
+│   ├── Hash-based sharding implementation
+│   ├── Range-based sharding (time/ID ranges)
+│   ├── Directory-based shard routing
+│   └── Cross-shard query aggregation
+├── Multi-Tenant Data Architecture
+│   ├── Tenant isolation strategies (shared schema, schema per tenant, DB per tenant)
+│   ├── Row-level security implementation
+│   └── Tenant-aware query routing
+├── Distributed Transaction Patterns
+│   ├── Saga pattern for cross-shard operations
+│   └── Eventual consistency handling
+└── Sharding Performance Benchmarking
 ```
+
+#### **SQLAlchemy ORM Learning Path (Integrated)**
+
+**Week 3: ORM Foundation**
+| Topic | SQLAlchemy Feature | FastAPI Integration |
+|-------|-------------------|---------------------|
+| Declarative Models | `DeclarativeBase`, `Mapped[]`, `mapped_column()` | Pydantic schemas with `model_validate()` |
+| Async Sessions | `create_async_engine`, `AsyncSession` | Dependency injection with `async_sessionmaker` |
+| CRUD Patterns | `session.add()`, `session.execute()`, `session.commit()` | Repository pattern endpoints |
+| Migrations | Alembic setup and auto-generation | CI/CD migration pipeline |
+| Connection Pool | `pool_size`, `max_overflow`, `pool_recycle` | Connection monitoring |
+
+**Week 4: Relationships & Query Optimization**
+| Topic | SQLAlchemy Feature | Use Case |
+|-------|-------------------|----------|
+| Relationships | `relationship()`, `ForeignKey()` | E-commerce: Users → Orders → Products |
+| Eager Loading | `selectinload()`, `joinedload()`, `subqueryload()` | Solving N+1 problem |
+| Query Building | `select()`, `where()`, `order_by()`, `limit()` | Dynamic filtering APIs |
+| Joins | `join()`, `outerjoin()`, `select_from()` | Complex reporting queries |
+| Aggregations | `func.count()`, `func.sum()`, `group_by()` | Dashboard analytics |
+| Window Functions | `func.row_number()`, `func.rank()` | Leaderboards, pagination |
+
+**Week 5: Production ORM Patterns**
+| Topic | SQLAlchemy Feature | Production Need |
+|-------|-------------------|-----------------|
+| Hybrid Properties | `@hybrid_property`, `@hybrid_method` | Computed columns, searchable fields |
+| Locking | `with_for_update()`, `selectinload()` with lock | Inventory management |
+| Soft Deletes | `deleted_at` column with filters | Data retention compliance |
+| Auditing | `@event.listens_for()` | Change tracking, compliance logs |
+| Bulk Operations | `session.bulk_insert_mappings()` | Data imports, migrations |
+| CTEs & Subqueries | `select().cte()`, `subquery()` | Hierarchical data, recursive queries |
+
+**Week 6: Sharding & Distributed Databases**
+| Topic | SQLAlchemy Feature | Scale Challenge |
+|-------|-------------------|-----------------|
+| Multiple Binds | `binds={}` configuration | Read replicas, multi-region |
+| Custom Routing | `session.get_bind()` override | Query routing logic |
+| Sharding | Custom `ShardSession`, `shard_chooser` | Horizontal scaling |
+| Partitioning | PostgreSQL declarative partitioning | Time-series data |
+| Cross-Shard Queries | Application-level aggregation | Analytics across shards |
+| Tenant Isolation | Schema translation, row-level security | SaaS multi-tenancy |
 
 **Theory Integration** (From README.md Phase 1)
 - ✅ Vertical vs horizontal scaling
@@ -129,12 +209,27 @@ Deliverables:
 - ✅ CAP theorem applications
 - ✅ Caching fundamentals
 
+**SQLAlchemy ORM Mastery Checklist:**
+- [ ] CRUD operations with async SQLAlchemy 2.0 style
+- [ ] Complex relationships (1:1, 1:N, N:M, self-referential)
+- [ ] Query optimization and N+1 problem resolution
+- [ ] Connection pooling tuning for production
+- [ ] Database migrations with Alembic
+- [ ] Advanced queries (CTEs, window functions, aggregations)
+- [ ] Soft deletes and auditing implementation
+- [ ] Read/Write splitting configuration
+- [ ] Sharding strategy implementation
+- [ ] Multi-tenant data architecture
+
 **Success Metrics:**
 - [ ] API handles 1000+ requests/second
-- [ ] <100ms average response time
+- [ ] <100ms average response time for ORM queries
 - [ ] 99.9% uptime achieved
 - [ ] Security best practices implemented
 - [ ] Load balancing working across 3+ servers
+- [ ] Complex ORM queries execute in <50ms with proper indexing
+- [ ] Zero N+1 query problems in all endpoints
+- [ ] Sharding implementation handles 10M+ rows
 
 ---
 
@@ -142,7 +237,7 @@ Deliverables:
 **Goal**: Master data pipelines and real-time processing
 
 #### **Data Pipeline Projects** (Enhanced with system design theory)
-```python
+```
 # Week 7-10 Data Engineering Projects
 
 ## Project 2.1: Real-time Streaming Pipeline
@@ -194,7 +289,7 @@ Deliverables:
 **Goal**: Build complete ML systems with production monitoring
 
 #### **MLOps Projects** (With system design principles)
-```python
+```
 # Week 11-14 ML Engineering Projects
 
 ## Project 3.1: Model Training Pipeline
@@ -246,7 +341,7 @@ Deliverables:
 **Goal**: Build cutting-edge AI applications with enterprise scale
 
 #### **LLM System Projects** (With distributed systems theory)
-```python
+```
 # Week 15-18 Advanced AI Projects
 
 ## Project 4.1: RAG Document System
@@ -300,7 +395,7 @@ Deliverables:
 **Goal**: Deploy global-scale systems with enterprise security
 
 #### **Enterprise Projects** (With real-world case studies)
-```python
+```
 # Week 19-22 Enterprise Deployment
 
 ## Project 5.1: Multi-Cloud Infrastructure
@@ -355,7 +450,7 @@ Deliverables:
 #### **Specialization Tracks** (6 weeks each)
 
 ### **Track A: AI Infrastructure Engineer** 💰 **$300K+ Target**
-```python
+```
 # Weeks 23-28: Infrastructure Specialization
 ├── GPU cluster management (1000+ GPUs)
 ├── Distributed training optimization
@@ -374,7 +469,7 @@ Projects:
 ```
 
 ### **Track B: Applied AI Research Engineer** 🧠 **Innovation Focus**
-```python
+```
 # Weeks 23-28: Research Specialization  
 ├── Latest paper implementations (weekly)
 ├── Novel architecture development
@@ -393,7 +488,7 @@ Projects:
 ```
 
 ### **Track C: AI Product Engineer** 🚀 **Product Leadership**
-```python
+```
 # Weeks 23-28: Product Specialization
 ├── AI-first product strategy development
 ├── User experience optimization
@@ -412,7 +507,7 @@ Projects:
 ```
 
 ### **Track D: Distributed Systems Architect** 🏗️ **Systems Focus**
-```python
+```
 # Weeks 23-28: Systems Specialization
 ├── Large-scale system architecture
 ├── Microservices orchestration
@@ -431,7 +526,7 @@ Projects:
 ```
 
 **Final Capstone Project** (All Tracks)
-```python
+```
 # Week 28: Enterprise Solution Demonstration
 ├── Real business problem solved
 ├── Complete production system
@@ -489,7 +584,7 @@ Requirements:
 ## 🎯 SUCCESS METRICS & ASSESSMENT
 
 ### **Technical Proficiency Metrics**
-```python
+```
 # Quantifiable skill measurements
 ├── Code Quality: 90%+ test coverage, linting clean
 ├── System Performance: <100ms latency, 99.9% uptime
@@ -500,7 +595,7 @@ Requirements:
 ```
 
 ### **Portfolio Development**
-```python
+```
 # Job-ready portfolio requirements
 ├── 60+ Projects completed and documented
 ├── 5+ Production systems deployed
@@ -512,7 +607,7 @@ Requirements:
 ```
 
 ### **Career Readiness Assessment**
-```python
+```
 # Job market preparation
 ├── System Design Interviews: Pass 90%+ of questions
 ├── Coding Challenges: Solve advanced problems
