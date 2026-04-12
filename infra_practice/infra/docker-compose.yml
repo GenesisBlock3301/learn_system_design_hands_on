@@ -1,6 +1,6 @@
 services:
   app:
-    image: ${IMAGE_NAME:-your-dockerhub-username/infra-practice-app}:${TAG:-latest}
+    image: ${IMAGE_NAME:genesisblock1033/infra-practice-app}:${TAG:-latest}
     container_name: infra-practice-app
     ports:
       - "${PORT:-8000}:8000"
