@@ -1,8 +1,7 @@
-version: "3.8"
-
 services:
   app:
     image: ${IMAGE_NAME:-genesisblock1033/infra-practice-app}:${TAG:-latest}
+    platform: linux/amd64
     container_name: infra-practice-app
     ports:
       - "${PORT:-8000}:8000"
