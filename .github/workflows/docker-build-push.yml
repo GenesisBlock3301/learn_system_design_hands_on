@@ -6,6 +6,7 @@ on:
     tags: ['v*']
   pull_request:
     branches: [main, master]
+  workflow_dispatch:
 
 env:
   REGISTRY: docker.io
@@ -52,13 +53,24 @@ jobs:
           context: ./infra_practice/app
           file: ./infra_practice/app/Dockerfile
           push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ steps.meta.outputs.tags }}
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:sha-${{ github.sha }}
+            ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Output image tag
+      - name: Summary
         if: github.event_name != 'pull_request'
         run: |
-          echo "Image pushed with tags:"
-          echo "${{ steps.meta.outputs.tags }}"
+          echo "## 🚀 Docker Image Published" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Tag | Image |" >> $GITHUB_STEP_SUMMARY
+          echo "|-----|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| \\`sha-${{ github.sha }}\\` | \\`${{ env.IMAGE_NAME }}:sha-${{ github.sha }}\\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| \\`latest\\` | \\`${{ env.IMAGE_NAME }}:latest\\` |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Deploy locally:" >> $GITHUB_STEP_SUMMARY
+          echo '\\`\\`\\`bash' >> $GITHUB_STEP_SUMMARY
+          echo "make deploy TAG=sha-${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo '\\`\\`\\`' >> $GITHUB_STEP_SUMMARY
