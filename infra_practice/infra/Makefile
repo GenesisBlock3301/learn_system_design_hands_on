@@ -3,7 +3,7 @@
 #        make deploy  (production - pull from Docker Hub)
 
 # Configuration
-IMAGE_NAME ?= your-dockerhub-username/infra-practice-app
+IMAGE_NAME ?= genesisblock1033/infra-practice-app
 TAG ?= latest
 PORT ?= 8000
 
