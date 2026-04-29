@@ -30,6 +30,8 @@ To ensure deep learning and avoid becoming a "copy-paste engineer", we follow a 
 
 Detailed strategy can be found in [LEARNING_STRATEGY.md](file:///Users/mdnuraminsifat/Desktop/learn_system_design_hands_on/LEARNING_STRATEGY.md).
 
+> 🤖 **Building agentic AI products?** See [AGENTIC_AI_ROADMAP.md](./AGENTIC_AI_ROADMAP.md) — a business-minded path covering LLMs, agent frameworks, production deployment, and the mindset habits that grow engineering + product judgment.
+
 ---
 
 ### 🎬 **PHASE 0 – Foundation (Weeks 1-2)**

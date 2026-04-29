@@ -76,7 +76,8 @@ run-build:
 	@echo "$(BLUE)=============================================$(NC)"
 	@echo ""
 	@$(COMPOSE) $(COMPOSE_DEV_FILE) down
-	@$(COMPOSE) $(COMPOSE_DEV_FILE) up -d --build --no-cache
+	@$(COMPOSE) $(COMPOSE_DEV_FILE) build --no-cache
+	@$(COMPOSE) $(COMPOSE_DEV_FILE) up -d
 	@echo ""
 	@echo "$(GREEN)✓ Local development server started!$(NC)"
 	@echo ""
