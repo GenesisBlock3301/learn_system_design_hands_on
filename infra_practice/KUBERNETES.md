@@ -143,83 +143,83 @@ kind load docker-image infra-practice-app:v1 --name learn-k8s
 Create `k8s/app.yaml` (one file, all objects):
 
 ```yaml
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: fastapi-deployment
-  labels:
-    app: fastapi-infra
-spec:
-  replicas: 3
-  selector:
-    matchLabels:
-      app: fastapi-infra
-  template:
-    metadata:
-      labels:
-        app: fastapi-infra
-    spec:
-      containers:
-        - name: app
-          image: infra-practice-app:v1
-          ports:
-            - containerPort: 8000
-          envFrom:
-            - configMapRef:
-                name: fastapi-config
-            - secretRef:
-                name: fastapi-secret
-          livenessProbe:
-            httpGet:
-              path: /health
-              port: 8000
-            initialDelaySeconds: 5
-            periodSeconds: 10
-          readinessProbe:
-            httpGet:
-              path: /health
-              port: 8000
-            initialDelaySeconds: 3
-            periodSeconds: 5
-          resources:
-            requests:
-              memory: "128Mi"
-              cpu: "100m"
-            limits:
-              memory: "256Mi"
-              cpu: "500m"
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: fastapi-service
-spec:
-  type: NodePort
-  selector:
-    app: fastapi-infra
-  ports:
-    - port: 80
-      targetPort: 8000
-      nodePort: 30080
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: fastapi-config
-data:
-  SERVICE_NAME: "infra-practice-app"
-  LOG_LEVEL: "info"
-  APP_ENV: "production"
-  VERSION: "1.0.0-k8s"
----
-apiVersion: v1
-kind: Secret
-metadata:
-  name: fastapi-secret
-type: Opaque
-stringData:
-  API_KEY: "super-secret-api-key-12345"
+---                                          # YAML document separator — lets multiple objects live in one file
+apiVersion: apps/v1                          # API group/version for Deployment (apps/v1)
+kind: Deployment                             # object type: a controller that manages replicated Pods
+metadata:                                    # identifying data for this object
+  name: fastapi-deployment                   # unique name within the namespace
+  labels:                                    # key/value tags on the Deployment object itself
+    app: fastapi-infra                       # used to filter with `kubectl get -l app=fastapi-infra`
+spec:                                        # desired state of the Deployment
+  replicas: 3                                # run 3 identical Pods for availability + load spreading
+  selector:                                  # how the Deployment finds the Pods it owns
+    matchLabels:                             # match Pods carrying ALL of these labels
+      app: fastapi-infra                     # must equal the template label below
+  template:                                  # the Pod blueprint the Deployment stamps out
+    metadata:                                # metadata applied to every created Pod
+      labels:                                # labels stamped onto each Pod
+        app: fastapi-infra                   # MUST match selector.matchLabels above
+    spec:                                    # the Pod's specification
+      containers:                            # list of containers in the Pod
+        - name: app                          # container name (unique within the Pod)
+          image: infra-practice-app:v1       # image to run; pinned tag, not :latest
+          ports:                             # ports the container exposes
+            - containerPort: 8000            # app listens on 8000 inside the container
+          envFrom:                           # bulk-inject env vars from other objects
+            - configMapRef:                  # pull every key from a ConfigMap...
+                name: fastapi-config         # ...named fastapi-config
+            - secretRef:                     # pull every key from a Secret...
+                name: fastapi-secret         # ...named fastapi-secret
+          livenessProbe:                     # "is it alive?" — failing this RESTARTS the container
+            httpGet:                         # probe by HTTP GET
+              path: /health                  # endpoint to hit
+              port: 8000                     # port to hit it on
+            initialDelaySeconds: 5           # wait 5s after start before probing (boot time)
+            periodSeconds: 10                # then probe every 10s
+          readinessProbe:                    # "ready for traffic?" — failing REMOVES Pod from Service
+            httpGet:                         # probe by HTTP GET
+              path: /health                  # endpoint to hit
+              port: 8000                     # port to hit it on
+            initialDelaySeconds: 3           # wait 3s after start before probing
+            periodSeconds: 5                 # then probe every 5s
+          resources:                         # compute resource declarations
+            requests:                        # guaranteed reservation used by the scheduler
+              memory: "128Mi"                # reserve 128 MiB RAM
+              cpu: "100m"                    # reserve 0.1 of a CPU core
+            limits:                          # hard ceilings enforced at runtime
+              memory: "256Mi"                # exceed → container OOMKilled
+              cpu: "500m"                    # exceed → CPU throttled (not killed)
+---                                          # start of the next object
+apiVersion: v1                               # core API group for Service
+kind: Service                                # object type: stable endpoint + load balancer for Pods
+metadata:                                    # identifying data
+  name: fastapi-service                      # Service name (also its internal DNS name)
+spec:                                        # desired state of the Service
+  type: NodePort                             # expose on a static port of every node (good for local/dev)
+  selector:                                  # which Pods receive traffic
+    app: fastapi-infra                       # route to Pods carrying this label
+  ports:                                     # port mappings
+    - port: 80                               # port the Service is reachable on (cluster-internal)
+      targetPort: 8000                       # forward to containerPort 8000 on the Pods
+      nodePort: 30080                        # external node port (range 30000–32767): <nodeIP>:30080
+---                                          # start of the next object
+apiVersion: v1                               # core API group for ConfigMap
+kind: ConfigMap                              # object type: non-sensitive config as key/value pairs
+metadata:                                    # identifying data
+  name: fastapi-config                       # name referenced by configMapRef above
+data:                                        # the config key/value pairs (plaintext)
+  SERVICE_NAME: "infra-practice-app"         # becomes env var SERVICE_NAME
+  LOG_LEVEL: "info"                          # becomes env var LOG_LEVEL
+  APP_ENV: "production"                      # becomes env var APP_ENV
+  VERSION: "1.0.0-k8s"                       # becomes env var VERSION
+---                                          # start of the next object
+apiVersion: v1                               # core API group for Secret
+kind: Secret                                 # object type: sensitive key/value data
+metadata:                                    # identifying data
+  name: fastapi-secret                       # name referenced by secretRef above
+type: Opaque                                 # generic user-defined secret (the default type)
+stringData:                                  # plaintext input; K8s base64-encodes it on write
+  API_KEY: "super-secret-api-key-12345"      # becomes env var API_KEY (base64 ≠ encryption!)
 ```
 
 Apply it:
@@ -265,14 +265,14 @@ You don't need to memorize everything. Know these 6 objects and you can figure o
 The smallest unit. Usually 1 container. Disposable.
 
 ```yaml
-apiVersion: v1
-kind: Pod
-metadata:
-  name: my-pod
-spec:
-  containers:
-    - name: app
-      image: my-image
+apiVersion: v1              # core API group for Pod
+kind: Pod                   # object type: the smallest schedulable unit
+metadata:                   # identifying data
+  name: my-pod              # Pod name
+spec:                       # desired state
+  containers:               # list of containers in this Pod
+    - name: app             # container name
+      image: my-image       # image to run
 ```
 
 > You almost never create Pods directly. Deployments create them for you.
@@ -281,39 +281,39 @@ spec:
 Manages Pods. Self-healing, scalable, rolling updates.
 
 ```yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: my-app
-spec:
-  replicas: 3
-  selector:
-    matchLabels:
-      app: my-app
-  template:
-    metadata:
-      labels:
-        app: my-app
-    spec:
-      containers:
-        - name: app
-          image: my-image:v1
+apiVersion: apps/v1            # API group/version for Deployment
+kind: Deployment               # object type: manages a replicated set of Pods
+metadata:                      # identifying data
+  name: my-app                 # Deployment name
+spec:                          # desired state
+  replicas: 3                  # keep 3 Pods running at all times
+  selector:                    # how the Deployment finds its Pods
+    matchLabels:               # match Pods with ALL these labels
+      app: my-app              # must equal the template label below
+  template:                    # Pod blueprint
+    metadata:                  # metadata for created Pods
+      labels:                  # labels stamped on each Pod
+        app: my-app            # MUST match selector.matchLabels
+    spec:                      # Pod spec
+      containers:              # containers in the Pod
+        - name: app            # container name
+          image: my-image:v1   # pinned image tag (avoid :latest)
 ```
 
 ### 3. Service
 Stable IP + DNS + load balancing for Pods.
 
 ```yaml
-apiVersion: v1
-kind: Service
-metadata:
-  name: my-service
-spec:
-  selector:
-    app: my-app        # Routes to Pods with this label
-  ports:
-    - port: 80
-      targetPort: 8000
+apiVersion: v1           # core API group for Service
+kind: Service            # object type: stable IP/DNS + load balancing
+metadata:                # identifying data
+  name: my-service       # Service name (also its DNS name)
+spec:                    # desired state
+  selector:              # which Pods receive traffic
+    app: my-app          # Routes to Pods with this label
+  ports:                 # port mappings
+    - port: 80           # port the Service listens on
+      targetPort: 8000   # port on the Pod to forward to
 ```
 
 | Type | Use Case |
@@ -326,25 +326,25 @@ spec:
 Non-sensitive configuration.
 
 ```yaml
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: my-config
-data:
-  LOG_LEVEL: "info"
+apiVersion: v1          # core API group for ConfigMap
+kind: ConfigMap         # object type: non-sensitive config
+metadata:               # identifying data
+  name: my-config       # ConfigMap name (referenced by pods)
+data:                   # key/value config pairs (plaintext)
+  LOG_LEVEL: "info"     # one config entry
 ```
 
 ### 5. Secret
 Sensitive data. Base64-encoded, **not encrypted by default**.
 
 ```yaml
-apiVersion: v1
-kind: Secret
-metadata:
-  name: my-secret
-type: Opaque
-stringData:
-  API_KEY: "secret-value"
+apiVersion: v1              # core API group for Secret
+kind: Secret                # object type: sensitive key/value data
+metadata:                   # identifying data
+  name: my-secret           # Secret name (referenced by pods)
+type: Opaque                # generic user-defined secret (default type)
+stringData:                 # plaintext input; K8s base64-encodes on write
+  API_KEY: "secret-value"   # one secret entry (base64 ≠ encryption)
 ```
 
 > 2026 best practice: Use **External Secrets Operator** or **Sealed Secrets** in production. Never commit raw Secret YAMLs to Git.
@@ -353,22 +353,22 @@ stringData:
 HTTP routing. Needs an **Ingress Controller** (NGINX, Traefik) to work.
 
 ```yaml
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: my-ingress
-spec:
-  rules:
-    - host: myapp.local
-      http:
-        paths:
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: my-service
-                port:
-                  number: 80
+apiVersion: networking.k8s.io/v1   # API group/version for Ingress
+kind: Ingress                       # object type: HTTP(S) routing rules
+metadata:                           # identifying data
+  name: my-ingress                  # Ingress name
+spec:                               # desired routing state
+  rules:                            # list of host/path routing rules
+    - host: myapp.local             # match requests for this hostname
+      http:                         # HTTP routing block
+        paths:                      # path-based rules for this host
+          - path: /                 # match this URL path...
+            pathType: Prefix        # ...as a prefix (everything under /)
+            backend:                # where matched traffic goes
+              service:              # send to a Service
+                name: my-service    # target Service name
+                port:               # target Service port
+                  number: 80        # port number on that Service
 ```
 
 ---

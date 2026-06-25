@@ -1,0 +1,88 @@
+# ============================================================================
+# DEPLOYMENT — manages the FastAPI pods (creates/replaces/scales them)
+# ============================================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fastapi-deployment
+  labels:
+    app: fastapi-infra          # label on the Deployment object itself (for filtering with kubectl)
+spec:
+  replicas: 3                   # run 3 identical pods for availability + load spreading
+  selector:
+    matchLabels:
+      app: fastapi-infra        # Deployment owns any pod carrying this label...
+  template:
+    metadata:
+      labels:
+        app: fastapi-infra      # ...and the pod template stamps that same label here (must match selector)
+    spec:
+      containers:
+        - name: app
+          image: infra-practice-app:v1   # locally built image; pull it from a registry in real clusters
+          ports:
+            - containerPort: 8000          # port the app listens on INSIDE the container
+          envFrom:
+            - configMapRef:
+                name: fastapi-config       # inject every key in the ConfigMap as an env var
+            - secretRef:
+                name: fastapi-secret       # inject every key in the Secret as an env var
+          livenessProbe:                   # "is the process alive?" — failing this RESTARTS the container
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 5         # wait 5s after start before first check (let app boot)
+            periodSeconds: 10              # then check every 10s
+          readinessProbe:                  # "ready for traffic?" — failing this REMOVES pod from the Service
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 3
+            periodSeconds: 5
+          resources:
+            requests:                      # guaranteed reservation — used by the scheduler to place the pod
+              memory: "128Mi"
+              cpu: "100m"                  # 100m = 0.1 of a CPU core
+            limits:                        # hard ceiling — exceed memory => OOMKilled, exceed cpu => throttled
+              memory: "256Mi"
+              cpu: "500m"
+---
+# ============================================================================
+# SERVICE — stable network endpoint + load balancing across the 3 pods
+# ============================================================================
+apiVersion: v1
+kind: Service
+metadata:
+  name: fastapi-service
+spec:
+  type: NodePort                # exposes the Service on a port of every node (good for local/dev)
+  selector:
+    app: fastapi-infra          # routes traffic to all pods carrying this label
+  ports:
+    - port: 80                  # port the Service is reachable on (cluster-internal)
+      targetPort: 8000          # forwards to containerPort 8000 on the pods
+      nodePort: 30080           # external port on the node: reach the app at <nodeIP>:30080 (range 30000-32767)
+---
+# ============================================================================
+# CONFIGMAP — non-sensitive configuration, injected as env vars (see envFrom)
+# ============================================================================
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: fastapi-config
+data:
+  SERVICE_NAME: "infra-practice-app"
+  LOG_LEVEL: "info"
+  APP_ENV: "production"
+  VERSION: "1.0.0-k8s"
+---
+# ============================================================================
+# SECRET — sensitive values (stored base64-encoded; use stringData for plaintext input)
+# ============================================================================
+apiVersion: v1
+kind: Secret
+metadata:
+  name: fastapi-secret
+type: Opaque                    # generic key/value secret (the default type)
+stringData:
+  API_KEY: "super-secret-api-key-12345"   # stringData lets you write plaintext; k8s base64-encodes it for you
